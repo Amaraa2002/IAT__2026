@@ -73,16 +73,10 @@
 <div class="frame" id="setup">
   <div class="part">Оролцогчийн мэдээлэл</div>
   
-  <!-- Таны нас - сонголттой -->
+  <!-- Таны нас - Текстээр оруулах болгосон -->
   <div class="form-row">
     <label for="age">Таны нас<span style="color:#c62828">*</span></label>
-    <select id="age" required>
-      <option value="">Сонгох</option>
-      <option value="18-30">18-30</option>
-      <option value="31-43">31-43</option>
-      <option value="44-56">44-56</option>
-      <option value="57+">57+</option>
-    </select>
+    <input type="text" id="age" placeholder="Жишээ нь: 25" required>
   </div>
   
   <!-- Хүйс -->
@@ -580,11 +574,11 @@ function hideErr(){ errEl.classList.add('hidden'); }
 
 /* ========== Flow ========== */
 window.goIntro = function(){
-  const age = ageEl.value;
+  const age = ageEl.value.trim();
   const gender = genderEl.value;
   const education = educationEl.value;
   
-  if(!age){ showErr('Таны насаа сонгоно уу.'); return; }
+  if(!age){ showErr('Таны насаа оруулна уу.'); return; }
   if(!education){ showErr('Боловсролын түвшинг сонгоно уу.'); return; }
   
   participant.age = age;
