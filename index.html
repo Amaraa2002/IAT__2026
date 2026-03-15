@@ -65,6 +65,11 @@
     .left, .right { font-size: 24px; }
     .form-row { grid-template-columns: 1fr; gap: 5px; }
   }
+  
+  /* D-Score styles */
+  .dscore-box { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #2f9b30; }
+  .dscore-value { font-size: 28px; font-weight: 700; color: #2f9b30; }
+  .dscore-interpretation { font-size: 18px; font-weight: 600; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -502,6 +507,101 @@ const SELF_ESTEEM_QUESTIONS = [
     "4) Бүрэн санал нийлэхгүй байна"
   ]}
 ];
+
+/* ========== ШИНЭ: D-Оноо тооцоолох функцууд ========== */
+function calculateMean(values) {
+  if (values.length === 0) return 0;
+  const sum = values.reduce((a, b) => a + b, 0);
+  return sum / values.length;
+}
+
+function calculatePopulationStandardDeviation(values) {
+  if (values.length === 0) return 0;
+  const mean = calculateMean(values);
+  const squareDiffs = values.map(value => Math.pow(value - mean, 2));
+  const sumSquareDiffs = squareDiffs.reduce((a, b) => a + b, 0);
+  return Math.sqrt(sumSquareDiffs / values.length);
+}
+
+function calculateIATScore() {
+  // 5 ба 7-р хэсгийн зөв хариултууд
+  const part5Records = records.filter(r => r.part_index === 5 && r.correct === 1);
+  const part7Records = records.filter(r => r.part_index === 7 && r.correct === 1);
+
+  if (part5Records.length === 0 || part7Records.length === 0) {
+    return {
+      dScore: 0,
+      part5: { mean: 0, stdDev: 0, count: 0, accuracy: 0 },
+      part7: { mean: 0, stdDev: 0, count: 0, accuracy: 0 },
+      pooledStdDev: 0,
+      interpretation: "Тооцоолох боломжгүй"
+    };
+  }
+
+  const part5RT = part5Records.map(r => r.rt_ms);
+  const part7RT = part7Records.map(r => r.rt_ms);
+
+  const mean5 = calculateMean(part5RT);
+  const mean7 = calculateMean(part7RT);
+
+  const allRT = [...part5RT, ...part7RT];
+  const pooledStdDev = calculatePopulationStandardDeviation(allRT);
+
+  const dScore = pooledStdDev > 0 ? (mean7 - mean5) / pooledStdDev : 0;
+
+  const accuracy5 = (part5Records.length / records.filter(r => r.part_index === 5).length) * 100;
+  const accuracy7 = (part7Records.length / records.filter(r => r.part_index === 7).length) * 100;
+
+  let interpretation;
+  if (dScore < -0.65) interpretation = "Тэднийг илүүд үздэг";
+  else if (dScore < -0.35) interpretation = "Тэднийг бага зэрэг илүүд үздэг";
+  else if (dScore < 0.35) interpretation = "Төвийг сахисан";
+  else if (dScore < 0.65) interpretation = "Өөрийгөө бага зэрэг илүүд үздэг";
+  else interpretation = "Өөрийгөө илүүд үздэг";
+
+  return {
+    dScore,
+    part5: {
+      mean: mean5,
+      stdDev: calculatePopulationStandardDeviation(part5RT),
+      count: part5Records.length,
+      accuracy: accuracy5
+    },
+    part7: {
+      mean: mean7,
+      stdDev: calculatePopulationStandardDeviation(part7RT),
+      count: part7Records.length,
+      accuracy: accuracy7
+    },
+    pooledStdDev,
+    interpretation
+  };
+}
+
+/* ========== ШИНЭ: Excel-д харагдах D-Оноо мөр нэмэх ========== */
+function addIATScoreToCSV(csvContent) {
+  const iatScore = calculateIATScore();
+  
+  // Excel-д харагдах нэмэлт мөрүүд
+  const excelRows = [
+    '',
+    '=== IAT D-ОНОО ===',
+    `D-Оноо,${iatScore.dScore.toFixed(6)}`,
+    `Тайлбар,${iatScore.interpretation}`,
+    `5-р хэсгийн дундаж хугацаа (ms),${iatScore.part5.mean.toFixed(2)}`,
+    `5-р хэсгийн стандарт хазайлт,${iatScore.part5.stdDev.toFixed(2)}`,
+    `5-р хэсгийн нарийвчлал (%),${iatScore.part5.accuracy.toFixed(2)}`,
+    `7-р хэсгийн дундаж хугацаа (ms),${iatScore.part7.mean.toFixed(2)}`,
+    `7-р хэсгийн стандарт хазайлт,${iatScore.part7.stdDev.toFixed(2)}`,
+    `7-р хэсгийн нарийвчлал (%),${iatScore.part7.accuracy.toFixed(2)}`,
+    `Зөрүү (M7-M5),${(iatScore.part7.mean - iatScore.part5.mean).toFixed(2)}`,
+    `Нэгдсэн стандарт хазайлт,${iatScore.pooledStdDev.toFixed(2)}`,
+    `D = (M7-M5)/SD,${iatScore.dScore.toFixed(6)}`,
+    '========================'
+  ].join('\n');
+  
+  return csvContent + '\n' + excelRows;
+}
 
 /* ========== State ========== */
 const setup = document.getElementById('setup');
@@ -1167,7 +1267,9 @@ function toCSV(rows){
     });
   }
 
-  return UTF8_BOM + fullMeta + '\n' + header + '\n' + body + surveyRows;
+  // ШИНЭ: D-оноо нэмэх
+  const baseCSV = UTF8_BOM + fullMeta + '\n' + header + '\n' + body + surveyRows;
+  return addIATScoreToCSV(baseCSV);
 }
 
 function finalizeResults(){
@@ -1211,11 +1313,28 @@ function finalizeResults(){
 
 function escapeHtml(str){ return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
+// ШИНЭ: D-оноо харуулсан completion UI
 function renderCompletionUI(csv, filename){
+  const iatScore = calculateIATScore();
+  
   const previewText = [
     `Нас: ${participant.age} | Хүйс: ${participant.gender || 'Тодорхойгүй'} | Боловсрол: ${participant.education}`,
     `Эхэлсэн: ${testStartedAt} | Дууссан: ${testFinishedAt}`,
     `IAT туршилтын тоо: ${records.length} | Зөв: ${records.filter(r=>r.correct===1).length} | Буруу: ${records.filter(r=>r.correct===0).length}`,
+    ``,
+    `=== IAT D-ОНОО ===`,
+    `D-Оноо: ${iatScore.dScore.toFixed(6)}`,
+    `Тайлбар: ${iatScore.interpretation}`,
+    `5-р хэсгийн дундаж хугацаа: ${iatScore.part5.mean.toFixed(2)} ms`,
+    `5-р хэсгийн стандарт хазайлт: ${iatScore.part5.stdDev.toFixed(2)} ms`,
+    `5-р хэсгийн нарийвчлал: ${iatScore.part5.accuracy.toFixed(2)}%`,
+    `7-р хэсгийн дундаж хугацаа: ${iatScore.part7.mean.toFixed(2)} ms`,
+    `7-р хэсгийн стандарт хазайлт: ${iatScore.part7.stdDev.toFixed(2)} ms`,
+    `7-р хэсгийн нарийвчлал: ${iatScore.part7.accuracy.toFixed(2)}%`,
+    `Зөрүү (M7-M5): ${(iatScore.part7.mean - iatScore.part5.mean).toFixed(2)} ms`,
+    `Нэгдсэн стандарт хазайлт: ${iatScore.pooledStdDev.toFixed(2)} ms`,
+    `D = (M7-M5)/SD: ${iatScore.dScore.toFixed(6)}`,
+    ``,
     `Платформ сонголт: ${selectedPlatform || 'Сонгоогүй'}`,
     `BSQ асуулга: ${Object.keys(survey2Answers).length}/16`,
     `Розенберг тест: ${Object.keys(survey3Answers).length}/10`,
@@ -1226,6 +1345,35 @@ function renderCompletionUI(csv, filename){
   completionMount.innerHTML = `
     <div class="results-box">
       <div class="results-title">Тест дууслаа — Танд баярлалаа</div>
+      
+      <!-- ШИНЭ: D-Оноо харуулах хэсэг -->
+      <div class="dscore-box">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-size: 14px; color: #666;">IAT D-Оноо</div>
+            <div class="dscore-value">${iatScore.dScore.toFixed(6)}</div>
+            <div class="dscore-interpretation">${iatScore.interpretation}</div>
+          </div>
+        </div>
+        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="background: white; padding: 10px; border-radius: 5px;">
+            <strong>5-р хэсэг:</strong><br>
+            Дундаж: ${iatScore.part5.mean.toFixed(2)} ms<br>
+            SD: ${iatScore.part5.stdDev.toFixed(2)} ms<br>
+            Нарийвчлал: ${iatScore.part5.accuracy.toFixed(1)}%
+          </div>
+          <div style="background: white; padding: 10px; border-radius: 5px;">
+            <strong>7-р хэсэг:</strong><br>
+            Дундаж: ${iatScore.part7.mean.toFixed(2)} ms<br>
+            SD: ${iatScore.part7.stdDev.toFixed(2)} ms<br>
+            Нарийвчлал: ${iatScore.part7.accuracy.toFixed(1)}%
+          </div>
+        </div>
+        <div style="margin-top: 10px; padding: 8px; background: #fff; border-radius: 5px; font-size: 14px;">
+          <strong>Тооцоо:</strong> (${iatScore.part7.mean.toFixed(2)} - ${iatScore.part5.mean.toFixed(2)}) / ${iatScore.pooledStdDev.toFixed(2)} = ${iatScore.dScore.toFixed(6)}
+        </div>
+      </div>
+      
       <div class="results-role"><strong>Оролцогч:</strong> Хүсвэл өөрөө файлаа татаж авч болно.</div>
       <div class="results-actions">
         <button class="btn btn-success" id="btn-download">Файлыг татаж авах (CSV)</button>
