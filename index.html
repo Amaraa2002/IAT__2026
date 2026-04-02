@@ -57,6 +57,18 @@
   .small-note { margin-top:10px; color:#6b7280; font-size:13px; }
   pre.results-preview { white-space:pre-wrap; background:#0b1220; color:#eaf0ff; padding:10px; border-radius:6px; margin-top:12px; overflow:auto; max-height:240px; }
 
+  /* Consent form styles */
+  .consent-box { background: #f9f9f9; border: 1px solid #bfe3f1; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .consent-title { font-size: 20px; font-weight: 700; text-align: center; color: #2f9b30; margin-bottom: 20px; }
+  .consent-text { font-size: 15px; line-height: 1.6; color: #333; margin-bottom: 20px; }
+  .consent-text p { margin: 12px 0; }
+  .consent-agreement { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; padding: 15px; background: #e8f4fd; border-radius: 8px; }
+  .consent-agreement input { width: 20px; height: 20px; cursor: pointer; }
+  .consent-agreement label { font-size: 16px; font-weight: 500; cursor: pointer; }
+  .btn-consent { background: #2f9b30; color: white; border: none; padding: 12px 30px; font-size: 16px; cursor: pointer; border-radius: 6px; transition: background 0.2s; }
+  .btn-consent:hover { background: #267c27; }
+  .btn-consent:disabled { background: #ccc; cursor: not-allowed; }
+
   /* Mobile responsiveness */
   @media (max-width: 768px) {
     .frame { padding: 16px 20px; margin: 20px auto; }
@@ -74,8 +86,29 @@
 </head>
 <body>
 
-<!-- ===== 1) SETUP ===== -->
-<div class="frame" id="setup">
+<!-- ===== 1) ЗӨВШӨӨРЛИЙН ХУУДАС (ШИНЭ) ===== -->
+<div class="frame" id="consentFrame">
+  <div class="consent-box">
+    <div class="consent-title">📋 Таниулсан зөвшөөрлийн хуудас</div>
+    <div class="consent-text">
+      <p><strong>Сайн байна уу?</strong> Танд энэ өдрийн мэндийг хүргэе. Уг судалгааны хариулт нь ЭШХ-д ашиглагдах бөгөөд хувийн оролцогчийн хувийн мэдээллийг задруулахгүй болно.</p>
+      <p><strong>Судалгааны зорилго:</strong> Сошиал медиа хэрэглэгчдийн биеийн галбирын сэтгэл ханамж ба өөрийн үнэлэмжийн хамаарлыг судлах</p>
+      <p><strong>Нууцлал:</strong> Судалгаанд оролцогчийн мэдээллийг зөвхөн уг судалгааны ажилд ашиглах ба судалгаанаас гарсан үр дүнд оролцогчийн хувийн мэдээллийг ашиглахгүй.</p>
+      <p><strong>Судлаачтай холбоо барих цахим шуудан:</strong> 22B1NUM0668@stud.num.edu.mn</p>
+      <p><strong>Заавар:</strong> Судалгааны бодомжуудад зөв, буруу хариулт гэж байхгүй тул та өөрт төрсөн мэдрэмжээрээ хариулахад болно. Танд баярлалаа.</p>
+    </div>
+    <div class="consent-agreement">
+      <input type="checkbox" id="consentCheckbox">
+      <label for="consentCheckbox">Би дээрх мэдээллийг уншиж, судалгаанд оролцохыг зөвшөөрч байна.</label>
+    </div>
+    <div style="text-align:center">
+      <button class="btn-consent" id="btnConsentNext" disabled>Үргэлжлүүлэх</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2) SETUP ===== -->
+<div class="frame hidden" id="setup">
   <div class="part">Оролцогчийн мэдээлэл</div>
   
   <!-- Таны нас - Текстээр оруулах болгосон -->
@@ -117,7 +150,7 @@
   <div class="err hidden" id="setupErr"></div>
 </div>
   
-<!-- ===== 2) INSTRUCTIONS ===== -->
+<!-- ===== 3) INSTRUCTIONS ===== -->
 <div class="frame hidden" id="intro">
   <div class="top">
     <div class="hint">Press "E" for</div><div></div><div class="hint">Press "I" for</div>
@@ -133,7 +166,7 @@
   </div>
 </div>
 
-<!-- ===== 3) STAGE ===== -->
+<!-- ===== 4) STAGE ===== -->
 <div class="frame hidden" id="stage">
   <div class="top">
     <div class="hint">Press "E" for</div><div></div><div class="hint">Press "I" for</div>
@@ -151,7 +184,7 @@
   <div id="errorX" class="bigx hidden">X</div>
 </div>
 
-<!-- ===== 4) SURVEY 1: Платформ сонголт (radio - зөвхөн НЭГ сонголт) ===== -->
+<!-- ===== 5) SURVEY 1: Платформ сонголт (radio - зөвхөн НЭГ сонголт) ===== -->
 <div class="frame hidden" id="survey1">
   <div class="survey-title" id="survey1Title">Сошиал платформын асуулга</div>
   <div class="survey-intro" id="survey1Intro">
@@ -164,7 +197,7 @@
   <div class="err hidden" id="survey1Err"></div>
 </div>
 
-<!-- ===== 5) SURVEY 2: Биеийн галбирын сэтгэл ханамжийн асуулга (BSQ) ===== -->
+<!-- ===== 6) SURVEY 2: Биеийн галбирын сэтгэл ханамжийн асуулга (BSQ) ===== -->
 <div class="frame hidden" id="survey2">
   <div class="survey-title">Биеийн галбирын сэтгэл ханамжийн асуулга (BSQ)</div>
   <div class="survey-intro">
@@ -177,7 +210,7 @@
   <div class="err hidden" id="survey2Err"></div>
 </div>
 
-<!-- ===== 6) SURVEY 3: Өөрийн үнэлэмжийн тест (Розенберг) ===== -->
+<!-- ===== 7) SURVEY 3: Өөрийн үнэлэмжийн тест (Розенберг) ===== -->
 <div class="frame hidden" id="survey3">
   <div class="survey-title">Өөрийн үнэлэмжийн тест (Розенберг)</div>
   <div class="survey-intro">
@@ -190,7 +223,7 @@
   <div class="err hidden" id="survey3Err"></div>
 </div>
 
-<!-- ===== 7) COMPLETION (mount) ===== -->
+<!-- ===== 8) COMPLETION (mount) ===== -->
 <div id="completionMount"></div>
 
 <script>
@@ -524,7 +557,7 @@ function calculatePopulationStandardDeviation(values) {
 }
 
 function calculateIATScore() {
-  // 5 ба 7-р хэсгийн зөв хариултууд
+  // 5 ба 7-р хэсгийн зөв хариултууд (part_index 5,7)
   const part5Records = records.filter(r => r.part_index === 5 && r.correct === 1);
   const part7Records = records.filter(r => r.part_index === 7 && r.correct === 1);
 
@@ -604,19 +637,20 @@ function addIATScoreToCSV(csvContent) {
 }
 
 /* ========== State ========== */
-const setup = document.getElementById('setup');
-const intro = document.getElementById('intro');
-const stage = document.getElementById('stage');
-const survey1 = document.getElementById('survey1');
-const survey2 = document.getElementById('survey2');
-const survey3 = document.getElementById('survey3');
-const survey1Title = document.getElementById('survey1Title');
-const survey1Intro = document.getElementById('survey1Intro');
+let consentGiven = false;
+const consentFrame = document.getElementById('consentFrame');
+const setupDiv = document.getElementById('setup');
+const introDiv = document.getElementById('intro');
+const stageDiv = document.getElementById('stage');
+const survey1Div = document.getElementById('survey1');
+const survey2Div = document.getElementById('survey2');
+const survey3Div = document.getElementById('survey3');
+const completionMountDiv = document.getElementById('completionMount');
+
 const errEl = document.getElementById('setupErr');
 const ageEl = document.getElementById('age');
 const genderEl = document.getElementById('gender');
 const educationEl = document.getElementById('education');
-const completionMount = document.getElementById('completionMount');
 
 const participant = { age:"", gender:"", education:"" };
 
@@ -637,6 +671,26 @@ let survey2Answers = {};
 let survey3Answers = {};
 let selectedPlatform = "";
 
+/* ========== Consent Checkbox Logic ========== */
+const consentCheckbox = document.getElementById('consentCheckbox');
+const btnConsentNext = document.getElementById('btnConsentNext');
+
+consentCheckbox.addEventListener('change', function() {
+  if (consentCheckbox.checked) {
+    btnConsentNext.disabled = false;
+  } else {
+    btnConsentNext.disabled = true;
+  }
+});
+
+btnConsentNext.addEventListener('click', function() {
+  if (consentCheckbox.checked) {
+    consentGiven = true;
+    consentFrame.classList.add('hidden');
+    setupDiv.classList.remove('hidden');
+  }
+});
+
 /* ========== Helpers ========== */
 function shuffle(a){
   const arr = a.slice();
@@ -649,11 +703,9 @@ function shuffle(a){
 
 function createWordList(leftWords, leftCount, rightWords, rightCount) {
   let result = [];
-  // Зүүн үгсийг нэмэх
   for(let i = 0; i < leftCount; i++) {
     result.push(leftWords[i % leftWords.length]);
   }
-  // Баруун үгсийг нэмэх
   for(let i = 0; i < rightCount; i++) {
     result.push(rightWords[i % rightWords.length]);
   }
@@ -686,7 +738,7 @@ window.goIntro = function(){
   participant.education = education;
   
   hideErr();
-  setup.classList.add('hidden');
+  setupDiv.classList.add('hidden');
   startStage();
 };
 
@@ -697,11 +749,11 @@ function startStage(){
 }
 
 function showIntroForPart(){
-  intro.classList.remove('hidden');
-  stage.classList.add('hidden');
-  survey1.classList.add('hidden');
-  survey2.classList.add('hidden');
-  survey3.classList.add('hidden');
+  introDiv.classList.remove('hidden');
+  stageDiv.classList.add('hidden');
+  survey1Div.classList.add('hidden');
+  survey2Div.classList.add('hidden');
+  survey3Div.classList.add('hidden');
   
   if (currentPart < 7) { // IAT parts
     const config = PART_CONFIG[currentPart];
@@ -733,14 +785,14 @@ function showIntroForPart(){
 }
 
 function startPart(){
-  intro.classList.add('hidden');
-  stage.classList.add('hidden');
-  survey1.classList.add('hidden');
-  survey2.classList.add('hidden');
-  survey3.classList.add('hidden');
+  introDiv.classList.add('hidden');
+  stageDiv.classList.add('hidden');
+  survey1Div.classList.add('hidden');
+  survey2Div.classList.add('hidden');
+  survey3Div.classList.add('hidden');
   
   if(currentPart < 7) { // IAT parts
-    stage.classList.remove('hidden');
+    stageDiv.classList.remove('hidden');
     const config = PART_CONFIG[currentPart];
     document.getElementById('partLabel').textContent = `Part ${currentPart+1} of 7`;
     document.getElementById('stageLeftCategory').textContent = config.leftCat;
@@ -759,7 +811,7 @@ function startPart(){
 }
 
 function showPlatformSelection() {
-  survey1.classList.remove('hidden');
+  survey1Div.classList.remove('hidden');
   survey1Title.textContent = "Сошиал платформын асуулга";
   survey1Intro.textContent = "Та доорх платформуудаас алийг нь илүү их цаг ашиглаж өнгөрүүлэхэд зарцуулдаг вэ? (ЗӨВХӨН НЭГ СОНГОЛТ)";
   
@@ -808,7 +860,6 @@ function showPlatformSelection() {
     document.getElementById('survey1Err').classList.add('hidden');
     
     if(selectedPlatform === "Алийг нь ч ашигладдаггүй") {
-      // Шууд BSQ руу шилжих
       survey1Answers = { platform: selectedPlatform };
       endPhase();
     } else {
@@ -886,7 +937,7 @@ function showPlatformQuestions(platform) {
 }
 
 function showBodyImageSurvey() {
-  survey2.classList.remove('hidden');
+  survey2Div.classList.remove('hidden');
   
   const container = document.getElementById('survey2Questions');
   container.innerHTML = '';
@@ -963,13 +1014,12 @@ function showBodyImageSurvey() {
     survey2Answers = answers;
     document.getElementById('survey2Err').classList.add('hidden');
     
-    // Розенберг тест рүү шилжих
     endPhase();
   });
 }
 
 function showSelfEsteemSurvey() {
-  survey3.classList.remove('hidden');
+  survey3Div.classList.remove('hidden');
   
   const container = document.getElementById('survey3Questions');
   container.innerHTML = '';
@@ -1073,7 +1123,7 @@ document.getElementById('btnMobileI').addEventListener('click', function() {
 });
 
 function handleKeyPress(key) {
-  if(stage.classList.contains('hidden')) return;
+  if(stageDiv.classList.contains('hidden')) return;
 
   const rt  = Math.round(performance.now() - (_trialStart || performance.now()));
   const word = SEQ[i];
@@ -1104,11 +1154,11 @@ function handleKeyPress(key) {
 
 document.addEventListener('keydown',(e)=>{
   if(e.code==='Space'){
-    if(!intro.classList.contains('hidden')){ e.preventDefault(); startPart(); return; }
+    if(!introDiv.classList.contains('hidden')){ e.preventDefault(); startPart(); return; }
   }
-  if(e.code==='Enter' && !setup.classList.contains('hidden')){ e.preventDefault(); window.goIntro(); return; }
+  if(e.code==='Enter' && !setupDiv.classList.contains('hidden')){ e.preventDefault(); window.goIntro(); return; }
 
-  if(stage.classList.contains('hidden')) return;
+  if(stageDiv.classList.contains('hidden')) return;
 
   if(e.key==='e' || e.key==='i'){
     const key = (e.key==='e') ? 'E' : 'I';
@@ -1267,7 +1317,6 @@ function toCSV(rows){
     });
   }
 
-  // ШИНЭ: D-оноо нэмэх
   const baseCSV = UTF8_BOM + fullMeta + '\n' + header + '\n' + body + surveyRows;
   return addIATScoreToCSV(baseCSV);
 }
@@ -1313,7 +1362,6 @@ function finalizeResults(){
 
 function escapeHtml(str){ return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
 
-// ШИНЭ: D-оноо харуулсан completion UI
 function renderCompletionUI(csv, filename){
   const iatScore = calculateIATScore();
   
@@ -1342,11 +1390,10 @@ function renderCompletionUI(csv, filename){
     csv.split('\n').slice(0,6).join('\n') + '\n...'
   ].join('\n');
 
-  completionMount.innerHTML = `
+  completionMountDiv.innerHTML = `
     <div class="results-box">
       <div class="results-title">Тест дууслаа — Танд баярлалаа</div>
       
-      <!-- ШИНЭ: D-Оноо харуулах хэсэг -->
       <div class="dscore-box">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
